@@ -114,10 +114,11 @@ class BackupManager:
             encryptor = DatabaseEncryptor()
             encryptor.decrypt_file(backup_path, temp_path, passphrase)
             
-            # Replace current database
-            shutil.copy2(temp_path, DB_PATH)
+            # Replace current database with the path from the Database instance
+            db_path = Path(self.db.db_path)
+            shutil.copy2(temp_path, db_path)
             
-            logger.info(f"Successfully restored from backup: {backup_path}")
+            logger.info(f"Successfully restored from backup {backup_path} to {db_path}")
             
         except Exception as e:
             logger.error(f"Restore failed: {e}")

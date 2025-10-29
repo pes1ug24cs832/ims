@@ -24,10 +24,22 @@ def temp_db_path():
 @pytest.fixture
 def db(temp_db_path):
     """Create a test database instance."""
+    # Create an empty file first
+    Path(temp_db_path).touch()
+    
+    # Initialize database
     db = Database(temp_db_path)
     db.connect()
+    db._create_schema()  # Ensure schema is created
+    
     yield db
+    
+    # Cleanup
     db.disconnect()
+    try:
+        Path(temp_db_path).unlink()
+    except FileNotFoundError:
+        pass
 
 @pytest.fixture
 def product_manager(db):
@@ -114,11 +126,12 @@ def test_db_integration_supplier_product_relationship(
 
 def test_db_integration_backup_restore(temp_db_path, db, product_manager):
     """Test database backup and restore functionality."""
+    # Ensure database is initialized
+    db.connect()
+    
     # Create backup manager with temporary backup directory
     backup_dir = tempfile.mkdtemp()
-    backup_manager = BackupManager(db, backup_dir)
-
-    # Add test data
+    backup_manager = BackupManager(db, backup_dir)    # Add test data
     product = product_manager.add_product(
         sku="BACKUP001",
         name="Backup Test Product",
@@ -141,6 +154,13 @@ def test_db_integration_backup_restore(temp_db_path, db, product_manager):
 
     # Restore from backup
     backup_manager.restore_from_backup(backup_path, passphrase)
+    
+    # Reconnect to the restored database to ensure fresh connection
+    db.disconnect()
+    db.connect()
+    
+    # Initialize schema after restore
+    db._create_schema()
 
     # Verify data is restored
     restored = product_manager.get_product("BACKUP001")
