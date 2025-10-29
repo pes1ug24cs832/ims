@@ -66,11 +66,12 @@ class BackupManager:
             backup_path = self.backup_dir / self._get_backup_filename()
             
             # Create backup
-            if not Path(DB_PATH).exists():
+            db_path = Path(self.db.path if hasattr(self.db, 'path') else DB_PATH)
+            if not db_path.exists():
                 raise BackupError("Database file not found")
                 
             # Copy database file
-            shutil.copy2(DB_PATH, backup_path)
+            shutil.copy2(db_path, backup_path)
             
             # Encrypt the backup
             encryptor = DatabaseEncryptor()
