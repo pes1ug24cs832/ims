@@ -38,18 +38,40 @@ class AuthManager:
         if username != ADMIN_USERNAME:
             logger.warning(f"Authentication failed for user: {username}")
             raise AuthenticationError("Invalid credentials")
-
+        
+        # Get current module's password hash
+        from . import auth
+        current_hash = auth.ADMIN_PASSWORD_HASH
+        
         # Debug logging for password verification
-        logger.debug(f"Attempting to verify password. Hash in config: {ADMIN_PASSWORD_HASH}")
-        is_valid = verify_password(password, ADMIN_PASSWORD_HASH)
+        logger.debug(f"Using password hash from auth module: {current_hash}")
+        is_valid = verify_password(password, current_hash)
         logger.debug(f"Password verification result: {is_valid}")
         
         if not is_valid:
             logger.warning(f"Authentication failed for user: {username} - password mismatch")
             raise AuthenticationError("Invalid credentials")
-
+        
+        # Create session
         logger.info(f"User authenticated successfully: {username}")
         self._current_session = Session(username, is_admin=True)
+        
+        try:
+            # Log the successful authentication
+            from .storage import Database
+            db = Database()
+            db.connect()
+            db.execute(
+                "INSERT INTO admin_logs (user, action, details) VALUES (?, ?, ?)",
+                (username, "LOGIN", "Successful authentication")
+            )
+            db.connection.commit()
+        except Exception as e:
+            logger.error(f"Failed to log authentication: {e}")
+        finally:
+            if 'db' in locals() and db.connection:
+                db.disconnect()
+        
         return self._current_session
 
     def get_current_session(self) -> Optional[Session]:
