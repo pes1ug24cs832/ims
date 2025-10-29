@@ -44,10 +44,15 @@ class TestCLISystem:
     @pytest.fixture
     def env_vars(self, temp_db_path):
         """Set up environment variables for testing."""
+        # Generate a test password hash
+        from src.auth import hash_password
+        test_password_hash = hash_password("adminpass")
+        
         old_vars = {}
         new_vars = {
             'IMS_DB_PATH': temp_db_path,
-            'IMS_BACKUP_DIR': tempfile.mkdtemp()
+            'IMS_BACKUP_DIR': tempfile.mkdtemp(),
+            'IMS_ADMIN_PASSWORD_HASH': test_password_hash  # Set password hash in environment
         }
         
         # Save old vars and set new ones

@@ -14,7 +14,10 @@ CRITICAL_STOCK_THRESHOLD = 5
 # Security settings
 HASH_ROUNDS = 12  # For bcrypt
 ADMIN_USERNAME = 'admin'  # For development only
-ADMIN_PASSWORD_HASH = '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LehpYyF/nH.cqyqgS'  # 'adminpass'
+ADMIN_PASSWORD_HASH = os.getenv(
+    'IMS_ADMIN_PASSWORD_HASH',
+    '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LehpYyF/nH.cqyqgS'  # Default hash for 'adminpass'
+)
 
 # Encryption settings
 ENCRYPTION_KEY_LENGTH = 32  # AES-256
