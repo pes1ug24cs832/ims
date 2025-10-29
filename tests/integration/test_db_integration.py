@@ -61,22 +61,28 @@ def order_processor(db, product_manager):
     return OrderProcessor(db, product_manager)
 
 @pytest.fixture
-def auth_manager(monkeypatch):
-    """Create an AuthManager instance with test credentials."""
-    # Generate a fresh hash for the test password
+def test_password_hash():
+    """Generate a test password hash."""
     test_password = "adminpass"
     password_hash = hash_password(test_password)
+    logger.info(f"Generated test hash: {password_hash}")
+    return password_hash
+
+@pytest.fixture
+def auth_manager(monkeypatch, test_password_hash):
+    """Create an AuthManager instance with test credentials."""
+    # Patch the password hash in auth module directly
+    monkeypatch.setattr('src.auth.ADMIN_PASSWORD_HASH', test_password_hash)
     
-    # Debug logging
-    logger.info(f"Test password: {test_password}")
-    logger.info(f"Generated hash: {password_hash}")
+    # Create auth manager after patching
+    manager = AuthManager()
     
-    # Patch the password hash in the config
-    import src.config
-    monkeypatch.setattr(src.config, 'ADMIN_PASSWORD_HASH', password_hash)
-    logger.info(f"Config hash after patch: {src.config.ADMIN_PASSWORD_HASH}")
+    # Verify patch worked
+    from src.auth import ADMIN_PASSWORD_HASH
+    logger.info(f"Verification - Auth module hash: {ADMIN_PASSWORD_HASH}")
+    assert ADMIN_PASSWORD_HASH == test_password_hash, "Hash patch failed"
     
-    return AuthManager()
+    return manager
 
 def test_db_integration_product_order_flow(product_manager, order_processor):
     """Test full product and order workflow integration."""
@@ -188,16 +194,19 @@ def test_db_integration_backup_restore(temp_db_path, db, product_manager):
     # Cleanup
     shutil.rmtree(backup_dir)
 
-def test_db_integration_authentication(auth_manager):
+def test_db_integration_authentication(auth_manager, test_password_hash):
     """Test authentication integration."""
-    from src.config import ADMIN_PASSWORD_HASH
-    logger.info(f"Current config hash before auth: {ADMIN_PASSWORD_HASH}")
+    from src.auth import ADMIN_PASSWORD_HASH
     
-    # Verify the hash is valid bcrypt
-    assert ADMIN_PASSWORD_HASH.startswith('$2b$'), "Hash should be bcrypt format"
+    # Verify the hash is still correctly patched
+    assert ADMIN_PASSWORD_HASH == test_password_hash, "Hash not properly patched"
+    logger.info(f"Verification - Hash before auth: {ADMIN_PASSWORD_HASH}")
     
     # Test successful login
     session = auth_manager.authenticate("admin", "adminpass")
+    assert session is not None, "Authentication should succeed"
+    assert session.username == "admin", "Session should have correct username"
+    assert session.is_admin is True, "Session should have admin privileges"
     assert session.username == "admin"
     assert session.is_admin is True
 
