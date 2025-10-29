@@ -10,7 +10,7 @@ from src.storage import Database
 from src.product_manager import ProductManager
 from src.supplier_manager import SupplierManager
 from src.order_processor import OrderProcessor
-from src.auth import AuthManager, AuthenticationError
+from src.auth import AuthManager, AuthenticationError, hash_password
 from src.backup_security import BackupManager
 
 @pytest.fixture
@@ -58,8 +58,15 @@ def order_processor(db, product_manager):
     return OrderProcessor(db, product_manager)
 
 @pytest.fixture
-def auth_manager():
-    """Create an AuthManager instance."""
+def auth_manager(monkeypatch):
+    """Create an AuthManager instance with test credentials."""
+    # Generate a fresh hash for the test password
+    test_password = "adminpass"
+    password_hash = hash_password(test_password)
+    
+    # Patch the password hash in the config
+    monkeypatch.setattr('src.config.ADMIN_PASSWORD_HASH', password_hash)
+    
     return AuthManager()
 
 def test_db_integration_product_order_flow(product_manager, order_processor):
