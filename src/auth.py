@@ -39,8 +39,13 @@ class AuthManager:
             logger.warning(f"Authentication failed for user: {username}")
             raise AuthenticationError("Invalid credentials")
 
-        if not verify_password(password, ADMIN_PASSWORD_HASH):
-            logger.warning(f"Authentication failed for user: {username}")
+        # Debug logging for password verification
+        logger.debug(f"Attempting to verify password. Hash in config: {ADMIN_PASSWORD_HASH}")
+        is_valid = verify_password(password, ADMIN_PASSWORD_HASH)
+        logger.debug(f"Password verification result: {is_valid}")
+        
+        if not is_valid:
+            logger.warning(f"Authentication failed for user: {username} - password mismatch")
             raise AuthenticationError("Invalid credentials")
 
         logger.info(f"User authenticated successfully: {username}")

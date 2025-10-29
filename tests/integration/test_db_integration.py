@@ -6,12 +6,15 @@ import shutil
 from decimal import Decimal
 from pathlib import Path
 
+import logging
 from src.storage import Database
 from src.product_manager import ProductManager
 from src.supplier_manager import SupplierManager
 from src.order_processor import OrderProcessor
 from src.auth import AuthManager, AuthenticationError, hash_password
 from src.backup_security import BackupManager
+
+logger = logging.getLogger(__name__)
 
 @pytest.fixture
 def temp_db_path():
@@ -64,8 +67,14 @@ def auth_manager(monkeypatch):
     test_password = "adminpass"
     password_hash = hash_password(test_password)
     
+    # Debug logging
+    logger.info(f"Test password: {test_password}")
+    logger.info(f"Generated hash: {password_hash}")
+    
     # Patch the password hash in the config
-    monkeypatch.setattr('src.config.ADMIN_PASSWORD_HASH', password_hash)
+    import src.config
+    monkeypatch.setattr(src.config, 'ADMIN_PASSWORD_HASH', password_hash)
+    logger.info(f"Config hash after patch: {src.config.ADMIN_PASSWORD_HASH}")
     
     return AuthManager()
 
@@ -181,6 +190,12 @@ def test_db_integration_backup_restore(temp_db_path, db, product_manager):
 
 def test_db_integration_authentication(auth_manager):
     """Test authentication integration."""
+    from src.config import ADMIN_PASSWORD_HASH
+    logger.info(f"Current config hash before auth: {ADMIN_PASSWORD_HASH}")
+    
+    # Verify the hash is valid bcrypt
+    assert ADMIN_PASSWORD_HASH.startswith('$2b$'), "Hash should be bcrypt format"
+    
     # Test successful login
     session = auth_manager.authenticate("admin", "adminpass")
     assert session.username == "admin"
