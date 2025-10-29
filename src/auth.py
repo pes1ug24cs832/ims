@@ -39,12 +39,11 @@ class AuthManager:
             logger.warning(f"Authentication failed for user: {username}")
             raise AuthenticationError("Invalid credentials")
         
-        # Get current module's password hash
-        from . import auth
-        current_hash = auth.ADMIN_PASSWORD_HASH
+        # Use the module-level ADMIN_PASSWORD_HASH directly
+        current_hash = ADMIN_PASSWORD_HASH
         
         # Debug logging for password verification
-        logger.debug(f"Using password hash from auth module: {current_hash}")
+        logger.debug("Using password hash from config module")
         is_valid = verify_password(password, current_hash)
         logger.debug(f"Password verification result: {is_valid}")
         
@@ -56,21 +55,17 @@ class AuthManager:
         logger.info(f"User authenticated successfully: {username}")
         self._current_session = Session(username, is_admin=True)
         
+        # Log the successful authentication using Database as context manager
+        from .storage import Database
         try:
-            # Log the successful authentication
-            from .storage import Database
-            db = Database()
-            db.connect()
-            db.execute(
-                "INSERT INTO admin_logs (user, action, details) VALUES (?, ?, ?)",
-                (username, "LOGIN", "Successful authentication")
-            )
-            db.connection.commit()
+            with Database() as db:
+                db.execute(
+                    "INSERT INTO admin_logs (user, action, details) VALUES (?, ?, ?)",
+                    (username, "LOGIN", "Successful authentication")
+                )
         except Exception as e:
+            # Log but don't fail authentication due to logging errors
             logger.error(f"Failed to log authentication: {e}")
-        finally:
-            if 'db' in locals() and db.connection:
-                db.disconnect()
         
         return self._current_session
 
