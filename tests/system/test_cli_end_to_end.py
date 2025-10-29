@@ -220,7 +220,14 @@ class TestCLISystem:
         )
         
         assert returncode == 0
-        assert "Error" in stdout
+        assert "Error" in stdout or "Invalid" in stdout
+
+        # Create a valid product first
+        input_data = "1\n1\nTEST001\nTest Product\n10.99\n5\n"
+        returncode, stdout, stderr = run_cli_command(
+            ["python", "-m", "src.cli"],
+            input_data
+        )
 
         # Try to create sale with insufficient stock
         input_data = "2\n1\nTEST001\n999\n"

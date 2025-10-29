@@ -1,7 +1,7 @@
 """Product management module for the Inventory Management System."""
 from dataclasses import dataclass
 from typing import List, Optional
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
 import logging
 
 from .storage import Database, DatabaseError
@@ -58,7 +58,12 @@ class ProductManager:
         # Validate inputs
         if not sku or not name:
             raise ProductError("SKU and name are required")
-        if price < 0:
+        if not isinstance(price, Decimal):
+            try:
+                price = Decimal(str(price))
+            except (TypeError, ValueError, DecimalInvalidOperation):
+                raise ProductError("Invalid price format")
+        if price < Decimal('0'):
             raise ProductError("Price cannot be negative")
         if initial_stock < 0:
             raise ProductError("Initial stock cannot be negative")
