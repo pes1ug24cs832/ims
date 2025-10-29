@@ -65,10 +65,12 @@ class BackupManager:
             # Generate backup path
             backup_path = self.backup_dir / self._get_backup_filename()
             
-            # Create backup
-            db_path = Path(self.db.path if hasattr(self.db, 'path') else DB_PATH)
+            # Get database path from the Database instance
+            db_path = Path(self.db.db_path)
+            logger.info(f"Database path: {db_path}")
+            logger.info(f"Database exists: {db_path.exists()}")
             if not db_path.exists():
-                raise BackupError("Database file not found")
+                raise BackupError(f"Database file not found at {db_path}")
                 
             # Copy database file
             shutil.copy2(db_path, backup_path)
