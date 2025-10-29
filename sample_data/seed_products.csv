@@ -1,0 +1,11 @@
+sku,name,description,price,stock_quantity
+LAPTOP001,Business Laptop,"15.6\" Business Laptop with Intel i5",899.99,15
+PHONE001,Smartphone X,"Latest model smartphone",599.99,25
+TABLET001,Tablet Pro,"10\" Professional Tablet",399.99,20
+MOUSE001,Wireless Mouse,"Ergonomic wireless mouse",29.99,50
+KEYBD001,Mechanical Keyboard,"RGB mechanical gaming keyboard",89.99,30
+HDPHN001,Wireless Headphones,"Noise-cancelling Bluetooth headphones",149.99,18
+SPEAK001,Bluetooth Speaker,"Portable waterproof speaker",79.99,22
+CHRGR001,Fast Charger,"65W USB-C fast charger",39.99,45
+CABLE001,USB-C Cable,"Braided 2m USB-C cable",14.99,100
+CASE001,Laptop Bag,"15.6\" padded laptop bag",49.99,35
