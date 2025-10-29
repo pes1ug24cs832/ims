@@ -2,6 +2,7 @@
 import pytest
 import tempfile
 import os
+import shutil
 from decimal import Decimal
 from pathlib import Path
 
